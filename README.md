@@ -13,18 +13,23 @@ This application offers to print out the values of a specified key, or it's
 typical index, in a text file containing multiple similar JSON records. So, 
 in the case of something like
 
-- {"keyname1":"value1","keyname2":123}
-- {"keyname1":"value2","keyname2":124}
-
+```json
+{"keyname1":"value1","keyname2":123}
+{"keyname1":"value2","keyname2":124}
+```
 Executing the script on field 1 would output
 
-- value1
-- value2
+```
+value1
+value2
+```
 
 And executing the script on the keyname2 key would result in 
 
-- 123
-- 1234
+```
+123
+1234
+```
 
 It's not ideal, it's a bit buggy but it's very handy doing a cut-style 
 command directly on JSON. 
