@@ -1,4 +1,14 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
+#title           :jc (JSONCut)
+#description     :Just multiple similar JSON strings by field/key.
+#author          :Shane Brennan
+#date            :20111109
+#version         :0.1
+#usage           :python js / ./jc
+#notes           :
+#python_version  :2.7.3
+#==============================================================================
+
 import sys
 import os
 import json
@@ -7,34 +17,48 @@ from collections import OrderedDict
 from optparse import OptionParser
 
 class JSONCut:
-	def __init__(self, keysFlag, uniqKeysFlag, delimArgs, fieldArgs, filename):
+	def __init__(self, listFlag, keyArgs, delimArgs, fieldArgs, filename):
 		# Open the file up for loading and read the first line
 		file = open(filename, "r")
 		firstLine = file.readline()
-		firstJSON = json.loads(firstLine)
+		firstJSON = json.loads(firstLine, object_pairs_hook = OrderedDict)
 		file.seek(0)
 
+		if listFlag:
+			listKeys = firstJSON.keys()
+			for key in listKeys:
+				print key
+
 		# Set the output delimiter
-		delim = delimArgs
+		if delimArgs == "\t":
+			delim = '\t'
+		elif delimArgs == ",":
+			delim = ','
+		elif delimArgs == " ":
+			delim = ' '
+		elif delimArgs == "":
+			delim = ''
+		else:
+			delim = delimArgs
 
 		# Process the fields
 		if fieldArgs is not None:
 			fieldsList = self.getFields(fieldArgs, firstJSON)
 
-		# Load and process the rest of the file line by line
-		jsonDict = json.loads(firstLine, object_pairs_hook = OrderedDict)
+			# Load and process the rest of the file line by line
+			jsonDict = json.loads(firstLine, object_pairs_hook = OrderedDict)
 
-		outputKeys = []
-		for field in fieldsList:
-			outputKeys.append(str(jsonDict.keys()[field - 1]))
+			outputKeys = []
+			for field in fieldsList:
+				outputKeys.append(str(jsonDict.keys()[field - 1]))
 
-		for line in file:
-			outputStrList = []
-			jsonDict = json.loads(firstLine, object_pairs_hook = OrderedDict)		
-			for key in outputKeys:
-				outputStrList.append(str(jsonDict[key]))
+			for line in file:
+				outputStrList = []
+				jsonDict = json.loads(line, object_pairs_hook = OrderedDict)		
+				for key in outputKeys:
+					outputStrList.append(str(jsonDict[key]))
 
-			print delim.join(outputStrList)
+				print delim.join(outputStrList)
 
 
 	def getFields(self, fieldArgs, jsonDict):
@@ -82,29 +106,29 @@ class JSONCut:
 def main(argv):
 	parser = OptionParser(usage = "Usage: jc [OPTIONS] [-f|--fields] <json-file>")
 
-	parser.add_option("-k", "--keys",
+	parser.add_option("-l", "--list",
 	action = "store_true",
-	dest = "keysFlag",
+	dest = "listFlag",
 	default = False,
 	help = "output the common JSON keys")
 
-	parser.add_option("-u", "--uniq",
+	parser.add_option("-k", "--key",
 	action = "store_true",
-	dest = "uniqKeysFlag",
+	dest = "keyArgs",
 	default = False,
-	help = "output the unique JSON keys")
+	help = "output field of the given key")
 
 	parser.add_option("-d", "--delimiter",
 	action = 'store',
-	dest = 'delimArgs',
+	dest = 'delim_Args',
 	default = ' ',
 	help = 'delimiter character')
 
 	parser.add_option("-f", "--field",
 	action = 'store',
-	dest = 'fieldArgs',
+	dest = 'field_Args',
 	default = None,
-	help = 'arguments')
+	help = 'output the field of the given index')
 
 	(options, filename) = parser.parse_args()
 
@@ -122,17 +146,12 @@ def main(argv):
 		print "\n", filename[0], " needs to be a file..."
 		sys.exit(1)
 
-	if options.keysFlag and options.uniqKeysFlag:
+	if options.keyArgs is None and options.field_Args is None:
 		parser.print_help()
 		print "\nOnly specify either unique or common JSON keys..."
 		sys.exit(1)
 
-	if not options.keysFlag and not options.uniqKeysFlag and not options.fieldArgs:
-		parser.print_help()
-		print "\nNeed to indicate fields to be cut, e.g., -f1"
-		sys.exit(1)
-
-	jc = JSONCut(options.keysFlag, options.uniqKeysFlag, options.delimArgs, options.fieldArgs, filename[0])
+	jc = JSONCut(options.listFlag, options.keyArgs, options.delim_Args, options.field_Args, filename[0])
 
 if __name__ == "__main__":
 	sys.exit(main(sys.argv))

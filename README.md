@@ -20,6 +20,7 @@ in the case of something like
 Executing the script on field 1 would output
 
 ```
+./jc -f1 myjsonfile.json
 value1
 value2
 ```
@@ -27,6 +28,7 @@ value2
 And executing the script on the keyname2 key would result in 
 
 ```
+./jc -k'keyname2' myjsonfile.json
 123
 1234
 ```
