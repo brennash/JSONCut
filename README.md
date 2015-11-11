@@ -1,5 +1,5 @@
 # JSONCut
-A version of the Linux cut command for multi-part JSON files.
+A version of the Linux cut command for multi-part JSON files.<br>
 Last updated 11th November 2015.
 
 ## Description
