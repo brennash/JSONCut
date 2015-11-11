@@ -1,0 +1,96 @@
+#!/usr/bin/env python
+import sys
+import os
+import json
+import re
+from optparse import OptionParser
+
+class JSONCut:
+
+	def __init__(self, keysFlag, uniqKeysFlag, fieldArgs, filename):
+
+		# Open the file up for loading and read the first line
+		file = open(filename, "r")
+		firstLine = file.readline()
+		firstJSON = json.loads(firstLine)
+		file.seek(0)
+
+		# Process the fields
+		if fieldArgs is not None:
+			fieldsList = self.getFields(fieldArgs, firstJSON)
+
+		# Load and process the rest of the file line by line
+		for line in file:
+			jsonDict = json.loads(line.rstrip())
+			
+
+	def getFields(self, fieldArgs, jsonDict):
+		maxFields = len(jsonDict.keys())
+		fieldList = []
+		regex = re.compile('[0-9]+')
+		fieldString = ''
+		rangeFlag = False	
+	
+		# Consider special case where fields start/end with '-'
+
+		for char in fieldArgs:
+			if char == ',':
+				fieldList.append(int(fieldString)-1)
+				fieldString = ""
+			if char == '-':
+				fieldList.append(int(fieldString)-1)
+				fieldString = ""
+				rangeFlag = True
+
+			if regex.match(char):
+				fieldString += char
+
+		fieldList.append(int(fieldString)-1)
+		print fieldList
+
+def main(argv):
+	parser = OptionParser(usage="Usage: jc [OPTIONS] [-f|--fields] <json-file>")
+	parser.add_option("-k", "--keys",
+		action="store_true",
+		dest="keysFlag",
+		default=False,
+		help="output the common JSON keys")
+
+	parser.add_option("-u", "--uniq",
+		action="store_true", 
+		dest="uniqKeysFlag",
+		default=False,
+		help="output the unique JSON keys")
+
+	parser.add_option("-f", "--field",
+	    	action='store',
+		dest='fieldArgs',
+		default=None,
+		help='arguments')
+
+	(options, filename) = parser.parse_args()
+
+	if len(filename) != 1:
+		parser.print_help()
+		sys.exit(1)
+
+	if os.path.exists(filename[0]) == False:
+		print "\nFilename (",filename[0],") doesn't exist..."
+		sys.exit(1)
+
+	if os.path.isfile(filename[0]) == False:
+		print "\n",filename[0]," needs to be a file..."
+		sys.exit(1)
+
+	if options.keysFlag and options.uniqKeysFlag:
+		print "\nOnly specify either unique or common JSON keys..."
+		sys.exit(1)
+
+	if not options.keysFlag and not options.uniqKeysFlag and not options.fieldArgs:
+		print "\nNeed to specify fields to be cut..."
+		sys.exit(1)
+
+	jc = JSONCut(options.keysFlag, options.uniqKeysFlag, options.fieldArgs, filename[0])
+		
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
