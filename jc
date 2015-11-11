@@ -3,70 +3,108 @@ import sys
 import os
 import json
 import re
+from collections import OrderedDict
 from optparse import OptionParser
 
 class JSONCut:
-
-	def __init__(self, keysFlag, uniqKeysFlag, fieldArgs, filename):
-
+	def __init__(self, keysFlag, uniqKeysFlag, delimArgs, fieldArgs, filename):
 		# Open the file up for loading and read the first line
 		file = open(filename, "r")
 		firstLine = file.readline()
 		firstJSON = json.loads(firstLine)
 		file.seek(0)
 
+		# Set the output delimiter
+		delim = delimArgs
+
 		# Process the fields
 		if fieldArgs is not None:
 			fieldsList = self.getFields(fieldArgs, firstJSON)
 
 		# Load and process the rest of the file line by line
+		jsonDict = json.loads(firstLine, object_pairs_hook = OrderedDict)
+
+		outputKeys = []
+		for field in fieldsList:
+			outputKeys.append(str(jsonDict.keys()[field - 1]))
+
 		for line in file:
-			jsonDict = json.loads(line.rstrip())
-			
+			outputStrList = []
+			jsonDict = json.loads(firstLine, object_pairs_hook = OrderedDict)		
+			for key in outputKeys:
+				outputStrList.append(str(jsonDict[key]))
+
+			print delim.join(outputStrList)
+
 
 	def getFields(self, fieldArgs, jsonDict):
+		startRegex = re.compile('^-[0-9]+$')
+		rangeRegex = re.compile('^[0-9]+-[0-9]+$')
+		singleRegex = re.compile('^[0-9]+$')
+		endRegex = re.compile('^[0-9]+-$')
+		fields = []
 		maxFields = len(jsonDict.keys())
-		fieldList = []
-		regex = re.compile('[0-9]+')
-		fieldString = ''
-		rangeFlag = False	
+		
+		fieldTokens = fieldArgs.split(',')
+
+		if len(fieldTokens) == 0:
+			print "Error, you need to specify the fields correctly..."
+			exit(1)
+
+		# Take care of the case with a starting field, e.g., -5
+		if startRegex.match(fieldTokens[0]):
+			for x in xrange(0, int(fieldTokens[0])):
+				fields.append(x)
+
+		# Handle other fields
+		for token in fieldTokens:
+			if rangeRegex.match(token):
+				rangeToken = token.split('-')
+				startRange = int(rangeToken[0])
+				endRange = int(rangeToken[1]) + 1
+				if endRange <= startRange:
+					print "Error, start({0}) and end({1}) ranges should be in order".format(startRange, endRange)
+				for x in xrange(startRange, endRange):
+					fields.append(x)
+
+			elif singleRegex.match(token):
+				fields.append(int(token))
 	
-		# Consider special case where fields start/end with '-'
+		# Take care of the ending field, e.g.3 -
+		if endRegex.match(fieldTokens[-1]):
+			rangeToken = token.split('-')
+			for x in xrange(int(rangeToken[0]), maxFields + 1):
+				fields.append(x)
 
-		for char in fieldArgs:
-			if char == ',':
-				fieldList.append(int(fieldString)-1)
-				fieldString = ""
-			if char == '-':
-				fieldList.append(int(fieldString)-1)
-				fieldString = ""
-				rangeFlag = True
+		return fields
 
-			if regex.match(char):
-				fieldString += char
-
-		fieldList.append(int(fieldString)-1)
-		print fieldList
 
 def main(argv):
-	parser = OptionParser(usage="Usage: jc [OPTIONS] [-f|--fields] <json-file>")
+	parser = OptionParser(usage = "Usage: jc [OPTIONS] [-f|--fields] <json-file>")
+
 	parser.add_option("-k", "--keys",
-		action="store_true",
-		dest="keysFlag",
-		default=False,
-		help="output the common JSON keys")
+	action = "store_true",
+	dest = "keysFlag",
+	default = False,
+	help = "output the common JSON keys")
 
 	parser.add_option("-u", "--uniq",
-		action="store_true", 
-		dest="uniqKeysFlag",
-		default=False,
-		help="output the unique JSON keys")
+	action = "store_true",
+	dest = "uniqKeysFlag",
+	default = False,
+	help = "output the unique JSON keys")
+
+	parser.add_option("-d", "--delimiter",
+	action = 'store',
+	dest = 'delimArgs',
+	default = ' ',
+	help = 'delimiter character')
 
 	parser.add_option("-f", "--field",
-	    	action='store',
-		dest='fieldArgs',
-		default=None,
-		help='arguments')
+	action = 'store',
+	dest = 'fieldArgs',
+	default = None,
+	help = 'arguments')
 
 	(options, filename) = parser.parse_args()
 
@@ -75,22 +113,26 @@ def main(argv):
 		sys.exit(1)
 
 	if os.path.exists(filename[0]) == False:
-		print "\nFilename (",filename[0],") doesn't exist..."
+		parser.print_help()
+		print "\nFilename (", filename[0], ") doesn't exist..."
 		sys.exit(1)
 
 	if os.path.isfile(filename[0]) == False:
-		print "\n",filename[0]," needs to be a file..."
+		parser.print_help()
+		print "\n", filename[0], " needs to be a file..."
 		sys.exit(1)
 
 	if options.keysFlag and options.uniqKeysFlag:
+		parser.print_help()
 		print "\nOnly specify either unique or common JSON keys..."
 		sys.exit(1)
 
 	if not options.keysFlag and not options.uniqKeysFlag and not options.fieldArgs:
-		print "\nNeed to specify fields to be cut..."
+		parser.print_help()
+		print "\nNeed to indicate fields to be cut, e.g., -f1"
 		sys.exit(1)
 
-	jc = JSONCut(options.keysFlag, options.uniqKeysFlag, options.fieldArgs, filename[0])
-		
+	jc = JSONCut(options.keysFlag, options.uniqKeysFlag, options.delimArgs, options.fieldArgs, filename[0])
+
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+	sys.exit(main(sys.argv))
