@@ -37,7 +37,10 @@ It's not ideal, it's a bit buggy but it's very handy doing a cut-style
 command directly on JSON. 
 
 ## Parameters
--l,--list   Lists all the common keys for each JSON object in the file
--u,--unique Lists all the keys only found on one line, and the line number/character position
--k,--keys   Prints out the values for specified keys, on each line they're found.
--f,--fields Prints out the values associated with an index, i.e., a particular key in order.
+-l,--list   Lists all the common keys for each JSON object in the file <br>
+<br>
+-u,--unique Lists all the keys only found on one line, and the line number/character position <br>
+<br>
+-k,--keys   Prints out the values for specified keys, on each line they're found. <br>
+<br>
+-f,--fields Prints out the values associated with an index, i.e., a particular key in order.<br>
