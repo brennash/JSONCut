@@ -1,6 +1,5 @@
 # JSONCut
-A version of the Linux cut command for multi-part JSON files.<br>
-Last updated 11th November 2015.
+A version of the Linux cut command for multi-part JSON files.
 
 ## Description
 This package is an implementation in Python of the JSON cut command, 
@@ -20,7 +19,7 @@ in the case of something like
 Executing the script on field 1 would output
 
 ```
-./jc -f1 myjsonfile.json
+./cutjson -f1 myjsonfile.json
 value1
 value2
 ```
@@ -28,7 +27,7 @@ value2
 And executing the script on the keyname2 key would result in 
 
 ```
-./jc -k'keyname2' myjsonfile.json
+./cutjson -k'keyname2' myjsonfile.json
 123
 1234
 ```
@@ -37,10 +36,11 @@ It's not ideal, it's a bit buggy but it's very handy doing a cut-style
 command directly on JSON. 
 
 ## Parameters
--l,--list   Lists all the common keys for each JSON object in the file <br>
-<br>
--u,--unique Lists all the keys only found on one line, and the line number/character position <br>
-<br>
--k,--keys   Prints out the values for specified keys, on each line they're found. <br>
-<br>
--f,--fields Prints out the values associated with an index, i.e., a particular key in order.<br>
+
+```bash
+-l,--list   Lists all the common keys for each JSON object in the file
+-u,--unique Lists all the keys only found on one line, and the line number/character position
+-k,--keys   Prints out the values for specified keys, on each line they're found.
+-f,--fields Prints out the values associated with an index, i.e., a particular key in order.
+```
+
